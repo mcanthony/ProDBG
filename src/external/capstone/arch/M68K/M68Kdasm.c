@@ -194,7 +194,6 @@ static int  g_initialized = 0;
 static unsigned int g_address_mask = 0xffffffff;
 
 static MCInst* g_inst;
-static char g_dasm_str[100]; /* string to hold disassembly */
 static char g_helper_str[100]; /* string to hold helpful info */
 static uint g_cpu_pc;        /* program counter */
 static uint g_cpu_ir;        /* instruction register */
@@ -284,22 +283,15 @@ static int make_int_16(int value)
 
 static void get_with_index_address_mode(cs_m68k_op* op, uint instruction, uint size, bool is_pc)
 {
-	uint base;
-	uint outer;
-	char base_reg[4];
-	char index_reg[8];
-	uint preindex;
-	uint postindex;
-	uint comma = 0;
-	uint temp_value;
-	uint extension;
-
-	extension = read_imm_16();
+	uint extension = read_imm_16();
 
 	op->address_mode = M68K_AM_AREGI_INDEX_BASE_DISP;
 
 	if (EXT_FULL(extension))
 	{
+		uint preindex;
+		uint postindex;
+
 		op->mem.base_reg = M68K_REG_INVALID;
 		op->mem.index_reg = M68K_REG_INVALID;
 
@@ -381,22 +373,6 @@ static void get_with_index_address_mode(cs_m68k_op* op, uint instruction, uint s
 /* Make string of effective address mode */
 void get_ea_mode_op(cs_m68k_op* op, uint instruction, uint size)
 {
-	static char b1[64];
-	static char b2[64];
-	static char* mode = b2;
-	uint extension;
-	uint base;
-	uint outer;
-	char base_reg[4];
-	char index_reg[8];
-	uint preindex;
-	uint postindex;
-	uint comma = 0;
-	uint temp_value;
-
-	/* Switch buffers so we don't clobber on a double-call to this function */
-	mode = mode == b1 ? b2 : b1;
-
 	// default to memory
 
 	op->type = M68K_OP_MEM;
@@ -510,9 +486,7 @@ void get_ea_mode_op(cs_m68k_op* op, uint instruction, uint size)
 		}
 
 		default:
-		{
-			sprintf(mode, "INVALID %x", instruction & 0x3f);
-		}
+			break;
 	}
 }
 
@@ -550,11 +524,6 @@ static void build_re_gen_1(bool isDreg, int opcode, uint8_t size)
 static void build_re_1(int opcode, uint8_t size)
 {
 	build_re_gen_1(true, opcode, size);
-}
-
-static void build_re_a_1(int opcode, uint8_t size)
-{
-	build_re_gen_1(false, opcode, size);
 }
 
 static void build_er_gen_1(bool isDreg, int opcode, uint8_t size)
@@ -822,7 +791,7 @@ static void build_bitfield_ins(int opcode, int has_d_arg)
 	if (has_d_arg) {
 		info->op_count = 2;
 		op1->address_mode = M68K_AM_REG_DIRECT_DATA;
-		op1->reg = M68K_REG_D0 + (extension>>12) & 7;
+		op1->reg = M68K_REG_D0 + ((extension >> 12) & 7);
 	}
 
 	get_ea_mode_op(op_ea, g_cpu_ir, 1);
@@ -977,12 +946,11 @@ static void build_chk2_cmp2(int size)
 
 static void build_move16(int data[2], int modes[2])
 {
+	int i;
+
 	cs_m68k* info = build_init_op(M68K_INS_MOVE16, 2, 0);
 
-	cs_m68k_op* op0 = &info->operands[0];
-	cs_m68k_op* op1 = &info->operands[1];
-
-	for (int i = 0; i < 2; ++i)
+	for (i = 0; i < 2; ++i)
 	{
 		cs_m68k_op* op = &info->operands[i];
 		op->type = M68K_OP_MEM;
@@ -1100,12 +1068,6 @@ static void build_er_1(int opcode, uint8_t size)
 {
 	build_er_gen_1(true, opcode, size);
 }
-
-static void build_er_a_1(int opcode, uint8_t size)
-{
-	build_er_gen_1(false, opcode, size);
-}
-
 
 /* ======================================================================== */
 /* ========================= INSTRUCTION HANDLERS ========================= */
@@ -2086,7 +2048,7 @@ static void d68020_cptrapcc_0(void)
 	LIMIT_CPU_TYPES(M68020_PLUS);
 	uint extension1 = read_imm_16();
 
-	cs_m68k* info = build_init_op(M68K_INS_FTRAPF, 0, 0);
+	build_init_op(M68K_INS_FTRAPF, 0, 0);
 
 	// these are all in row with the extension so just doing a add here is fine
 	g_inst->Opcode += (extension1 & 0x2f); 
@@ -3725,10 +3687,12 @@ unsigned int m68k_disassemble(MCInst* inst, unsigned int pc, unsigned int cpu_ty
 
 	if (info)
 	{
+		int i;
+
 		memset(info, 0, sizeof(cs_m68k));
 		info->op_size.type = M68K_SIZE_TYPE_CPU;
 
-		for (int i = 0; i < M68K_OPERAND_COUNT; ++i)
+		for (i = 0; i < M68K_OPERAND_COUNT; ++i)
 			info->operands[i].type = M68K_OP_REG; 
 	}
 
