@@ -120,8 +120,9 @@ static void printRegbitsRange(char* buffer, uint32_t data, const char* prefix)
 {
 	unsigned int first = 0;
 	unsigned int run_length = 0;
+	int i;
 
-	for (int i = 0; i < 8; ++i)
+	for (i = 0; i < 8; ++i)
 	{
 		if (data & (1 << i)) {
 			first = i;
@@ -158,9 +159,6 @@ static void registerBits(SStream* O, const cs_m68k_op* op)
 
 static void registerPair(SStream* O, const cs_m68k_op* op)
 {
-	int reg_value_0 = op->register_bits >> 4;
-	int reg_value_1 = op->register_bits & 0xf;
-
 	SStream_concat(O, "%s:%s", s_reg_names[M68K_REG_D0 + (op->register_bits >> 4)], 
 							   s_reg_names[M68K_REG_D0 + (op->register_bits & 0xf)]);
 }
@@ -307,6 +305,8 @@ void printAddressingMode(SStream* O, const cs_m68k* inst, const cs_m68k_op* op)
 void M68K_printInst(MCInst* MI, SStream* O, void* Info)
 {
 #ifndef CAPSTONE_DIET
+	int i = 0;
+
 	cs_m68k* info = &MI->flat_insn->detail->m68k;
 
 	const int op_count = info->op_count;
@@ -367,7 +367,7 @@ void M68K_printInst(MCInst* MI, SStream* O, void* Info)
 		return;
 	}
 
-	for (int i  = 0; i < op_count; ++i)
+	for (i  = 0; i < op_count; ++i)
 	{
 		printAddressingMode(O, info, &info->operands[i]);
 
