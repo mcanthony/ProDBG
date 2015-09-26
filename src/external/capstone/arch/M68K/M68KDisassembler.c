@@ -145,7 +145,7 @@ static void printRegbitsRange(char* buffer, uint32_t data, const char* prefix)
 
 static void registerBits(SStream* O, const cs_m68k_op* op)
 {
-	char buffer[128] = { };
+	char buffer[128];
 	unsigned int data = op->register_bits; 
 
 	buffer[0] = 0;
