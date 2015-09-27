@@ -34,7 +34,7 @@ typedef struct PDCapstoneFuncs
 	cs_err (*close)(csh* handle);
 
 	cs_err (*option)(csh handle, cs_opt_type type, size_t value);
-	cs_err (*errno)(csh handle);
+	cs_err (*err)(csh handle);
 
 	size_t (*disasm)(csh handle, const uint8_t* code, size_t code_size, uint64_t address, size_t count, cs_insn** insn);
 	bool (*disasmIter)(csh handle, const uint8_t** code, size_t* size, uint64_t* address, cs_insn* insn);

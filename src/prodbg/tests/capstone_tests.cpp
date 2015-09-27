@@ -31,6 +31,11 @@ void test_m68k(void**)
 
 	size_t count = csFuncs->disasm(handle, (const uint8_t*)M68K_CODE, sizeof(M68K_CODE), 0, 0, &insn);
 
+	for (size_t j = 0; j < count; j++) {
+		printf("0x%llx\t%s\t%s\n", insn[j].address, insn[j].mnemonic, insn[j].op_str);
+		//print_insn_detail(&insn[j]);
+	}
+
 	assert_int_equal(count, 4);
 
 	assert_string_equal(insn[0].mnemonic, "nop");
